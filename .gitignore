@@ -1,0 +1,29 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+.env
+
+# Node.js
+node_modules/
+frontend/dist/
+frontend/.vite/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+Thumbs.db
+Desktop.ini
+
+# Project Data (Local)
+projects/*
+!projects/.gitkeep
+shared_storage/*
+!shared_storage/.gitkeep
+brain/
+
+# ComfyUI / Worker
+worker/comfy_client.py.bak
