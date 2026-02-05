@@ -2,7 +2,7 @@
 
 **Date:** 2026-02-04
 **Version:** 2.0
-**Author:** Antigravity Project
+**Author:** Dongseo University Virtual Convergence Technology Research Institute & Red Cat Gang Co., Ltd.
 
 ---
 

@@ -27,3 +27,4 @@ brain/
 
 # ComfyUI / Worker
 worker/comfy_client.py.bak
+ref/
