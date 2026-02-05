@@ -24,18 +24,43 @@ class WorkflowType(str, Enum):
     FFLF = "fflf"
     FRAME_SPLIT = "frame_split"
 
+class ShotSubject(BaseModel):
+    character_id: str
+    action: str = ""
+    costume_override: Optional[str] = None
+    lora_weight: float = 1.0
+
+class TechnicalSpecs(BaseModel):
+    camera: Optional[str] = "Arri Alexa"
+    film_stock: Optional[str] = "Kodak Vision3"
+    lighting: Optional[str] = None
+    lens: Optional[str] = "Anamorphic"
+    aspect_ratio: str = "16:9"
+    filter: List[str] = []
+
+class Environment(BaseModel):
+    location: str = ""
+    weather: Optional[str] = None
+    time_of_day: Optional[str] = None
+    reference_image: Optional[str] = None # Path to image
+    
 class Shot(BaseModel):
     id: str = Field(..., description="SHT-00001 형식의 고유 ID")
-    sequence_id: Optional[str] = None # 시퀀스 그룹핑용
+    sequence_id: Optional[str] = None 
     
-    # 내용
+    # Core Content
     scene_description: str
-    action: str
     dialogue: Optional[str] = None
     
-    # 연결된 자산
-    character_ids: List[str] = Field(default_factory=list)
-    cinematic_id: Optional[str] = None
+    # Structured Data (V2)
+    subjects: List[ShotSubject] = Field(default_factory=list)
+    environment: Environment = Field(default_factory=Environment)
+    technical: TechnicalSpecs = Field(default_factory=TechnicalSpecs)
+    
+    # Legacy Fields (Deprecated but kept for manual overrides or fallback)
+    action: Optional[str] = None 
+    character_ids: List[str] = Field(default_factory=list) # Sync with subjects?
+    cinematic_id: Optional[str] = None # Link to CinematicOption preset
     
     # 생성 정보
     generated_prompt: Optional[str] = None

@@ -5,107 +5,97 @@ from ..models.cinematic import CinematicOption
 
 class PromptEngine:
     @staticmethod
-    def assemble_prompt(shot: Shot, 
-                       characters: List[Character], 
-                       cinematic: Optional[CinematicOption] = None) -> str:
+    def assemble_prompt(shot: Shot, characters: List[Character]) -> str:
         """
-        Shot, Character, CinematicOption 정보를 기반으로 최종 프롬프트를 조립합니다.
-        Airtable의 CONCATENATE 수식 로직을 기반으로 합니다.
+        Assembles the final prompt based on Shot (V2) and Character information.
         """
-        
         parts = []
         
-        # 1. 스타일 (Cinematic Option)
-        if cinematic:
-            style_prefix = []
-            if cinematic.style:
-                style_prefix.append(f"A {cinematic.style} image of")
-            else:
-                style_prefix.append("A cinematic shot of")
-                
-            parts.append(" ".join(style_prefix))
+        # 1. Technical / Cinematic Style (Prefix)
+        tech = shot.technical
+        if tech:
+            # E.g. "A cinematic shot of..."
+            # We can use camera/lens info here or at the end. 
+            # Common pattern: "[Style] shot of [Subject]..."
+            prefix = "A cinematic shot of"
+            if tech.lighting:
+                prefix = f"A {tech.lighting} lighting shot of"
+            parts.append(prefix)
         else:
             parts.append("A cinematic shot of")
-            
-        # 2. 주체 및 액션 (Char + Shot Action)
-        # 캐릭터 설명 조합
-        char_descriptions = []
-        for char in characters:
-            desc = char.description
-            # 캐릭터 의상이 지정된 경우 (나중에 shot.clothing_overrides 등으로 확장 가능)
-            if char.default_clothing:
-                desc += f" wearing {char.default_clothing}"
-            char_descriptions.append(desc)
-            
-        if char_descriptions:
-            subject_str = " and ".join(char_descriptions)
-            parts.append(f"{subject_str}, {shot.action}")
-        else:
-            # 캐릭터가 없는 풍경 샷 등
-            parts.append(f"{shot.scene_description}, {shot.action}")
-            
-        # 3. 환경 (Cinematic Environment)
-        if cinematic and cinematic.environment:
-            parts.append(f"set in {cinematic.environment}")
-        elif "set in" not in shot.scene_description: # 중복 방지
-             parts.append(f"set in {shot.scene_description}")
 
-        # 4. 카메라 및 기술정 세부사항 (Camera Details)
-        if cinematic:
-            camera_details = []
-            if cinematic.camera_body:
-                camera_details.append(f"captured with {cinematic.camera_body}")
-            if cinematic.focal_length:
-                camera_details.append(f"{cinematic.focal_length}")
-            if cinematic.lens_type:
-                camera_details.append(f"{cinematic.lens_type} lens")
-            if cinematic.film_stock:
-                camera_details.append(f"{cinematic.film_stock} film look")
+        # 2. Subjects & Action
+        subject_descs = []
+        
+        # Map characters by ID for easy lookup if needed, but we iterate shot.subjects
+        char_map = {c.id: c for c in characters}
+        
+        for subject in shot.subjects:
+            char = char_map.get(subject.character_id)
+            if char:
+                # Name (Trigger Word)
+                # Use name or trigger word? Usually name + description or just name if trained.
+                # Let's use Name + Description for now, or just Name if known
+                desc_part = char.name
                 
-            if camera_details:
-                parts.append(", ".join(camera_details))
+                # Costume: Override > Default > None
+                costume = subject.costume_override or char.default_clothing
+                if costume:
+                    desc_part += f" wearing {costume}"
                 
-        # 5. 조명 및 분위기 (Lighting & Atmosphere)
-        if cinematic:
-            mood_details = []
-            if cinematic.lighting_source or cinematic.lighting_style:
-                light = f"{cinematic.lighting_source or ''} {cinematic.lighting_style or ''}".strip()
-                if light: mood_details.append(f"{light} lighting")
-                
-            if cinematic.atmosphere:
-                mood_details.append(f"{cinematic.atmosphere} atmosphere")
-            
-            if cinematic.filter_type:
-                mood_details.append(f"{cinematic.filter_type} filter")
-            
-            if cinematic.look_and_feel:
-                mood_details.append(f"style of {cinematic.look_and_feel}")
-                
-            if mood_details:
-                parts.append(", ".join(mood_details))
+                # Action
+                if subject.action:
+                    desc_part += f", {subject.action}"
+                    
+                subject_descs.append(desc_part)
+            else:
+                # Unknown character ID
+                pass
 
-        # 6. LoRA Trigger Words (자동 추가)
-        trigger_words = []
+        if subject_descs:
+            parts.append(" and ".join(subject_descs))
+        elif shot.scene_description:
+            # Fallback if no subjects but description exists
+            parts.append(shot.scene_description)
+
+        # 3. Environment
+        env = shot.environment
+        env_parts = []
+        if env.location:
+            env_parts.append(f"in {env.location}")
+        if env.weather:
+            env_parts.append(f"during {env.weather} weather")
+        if env.time_of_day:
+            env_parts.append(f"at {env.time_of_day}")
+            
+        if env_parts:
+            parts.append(", ".join(env_parts))
+            
+        # 4. Technical Details (Suffix)
+        tech_details = []
+        if tech.camera: tech_details.append(f"shot on {tech.camera}")
+        if tech.film_stock: tech_details.append(f"{tech.film_stock}, film grain")
+        if tech.lens: tech_details.append(f"{tech.lens} lens")
+        if tech.filter: tech_details.extend(tech.filter)
+        
+        if tech_details:
+            parts.append(", ".join(tech_details))
+
+        # 5. LoRA Triggers (Auto-append)
+        triggers = []
         for char in characters:
             if char.use_lora and char.trigger_words:
-                trigger_words.extend(char.trigger_words)
+                triggers.extend(char.trigger_words)
         
-        # 중복 제거 및 추가
-        if trigger_words:
-            unique_triggers = list(dict.fromkeys(trigger_words)) # 순서 유지 중복 제거
-            parts.append(", ".join(unique_triggers))
+        if triggers:
+            parts.append(", ".join(list(set(triggers))))
 
-        # 7. 포맷 (Aspect Ratio는 프롬프트 텍스트보다는 생성 설정에 가깝지만, 텍스트로도 명시 가능)
-        if cinematic and cinematic.aspect_ratio:
-            parts.append(f"--ar {cinematic.aspect_ratio.replace(':', ':')}")
+        # 6. Aspect Ratio (Optional, usually handled by params but good to have in prompt for some models)
+        # if tech.aspect_ratio: parts.append(f"--ar {tech.aspect_ratio}")
 
-        # 최종 조립
-        final_prompt = ", ".join(parts)
-        
-        # 불필요한 공백 및 문장 부호 정리
-        final_prompt = final_prompt.replace(" ,", ",").replace(",,", ",").strip()
-        
-        return final_prompt
+        # Assemble
+        full_prompt = ", ".join(parts)
+        return full_prompt
 
     @staticmethod
     def get_lora_config(characters: List[Character]) -> List[dict]:

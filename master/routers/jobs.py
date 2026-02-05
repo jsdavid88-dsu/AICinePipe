@@ -1,7 +1,8 @@
 from fastapi import APIRouter, HTTPException, Depends, Body
 from typing import List, Optional
-from ..dependencies import get_job_manager
+from ..dependencies import get_job_manager, get_local_executor
 from ..services.job_manager import JobManager
+from ..services.prompt_engine import PromptEngine
 from ..models.job import Job, JobStatus
 
 router = APIRouter(
@@ -24,6 +25,36 @@ async def create_job(
 ):
     try:
         from ..websocket.connection_manager import manager as ws_manager
+        
+        # 0. Assemble Prompt from Shot Data
+        # Retrieve Shot & Characters
+        data_mgr = manager.data_manager
+        shot = data_mgr.get_shot(shot_id)
+        if not shot:
+            raise HTTPException(status_code=404, detail=f"Shot {shot_id} not found")
+            
+        relevant_chars = []
+        for subject in shot.subjects:
+            char = data_mgr.get_character(subject.character_id)
+            if char: relevant_chars.append(char)
+            
+        # Assemble Prompt
+        generated_prompt = PromptEngine.assemble_prompt(shot, relevant_chars)
+        
+        # Inject into params (Prepend if user provided one, or overwrite)
+        user_prompt = params.get("prompt", "")
+        if user_prompt:
+            combined_prompt = f"{generated_prompt}, {user_prompt}"
+        else:
+            combined_prompt = generated_prompt
+            
+        params["prompt"] = combined_prompt
+        
+        # Inject LoRA params if needed? (PromptEngine can return lora config, but we need to inject into params for executor)
+        # For now, let's assume LoRA mapping is handled by workflow or specialized PromptEngine method
+        # PromptEngine.get_lora_config(relevant_chars) -> could be added to params["loras"] 
+        # But LocalExecutor needs to know how to handle it. Phase 4 stuff.
+        # For Phase 3, prompt text is key.
         
         # 1. Create Job Record
         job = manager.create_job(project_id, shot_id, workflow_type, params)

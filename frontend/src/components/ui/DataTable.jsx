@@ -136,7 +136,7 @@ const DataTable = ({ columns, data, onRowUpdate, onRowAdd, onRowDelete, renderRo
                         No data available. Click "Add Record" to start.
                     </div>
                 )}
-                {data.map((row) => (
+                {data.map((row, index) => (
                     <div key={row.id} className="flex group hover:bg-white/5 transition-colors relative">
                         {columns.map(col => (
                             <div
@@ -155,7 +155,7 @@ const DataTable = ({ columns, data, onRowUpdate, onRowAdd, onRowDelete, renderRo
 
                         {/* Actions */}
                         <div className="w-24 shrink-0 flex items-center justify-center gap-1 border-white/5">
-                            {renderRowAction && renderRowAction(row)}
+                            {renderRowAction && renderRowAction(row, index)}
                             {onRowDelete && (
                                 <button
                                     onClick={(e) => {
