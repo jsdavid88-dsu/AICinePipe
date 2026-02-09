@@ -32,6 +32,9 @@ data/*.db-shm
 logs/
 *.log
 
+# Internal Dev Docs (not for public repo)
+docs/dev/
+
 # ComfyUI / Worker
 worker/comfy_client.py.bak
 ref/
