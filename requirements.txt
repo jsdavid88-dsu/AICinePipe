@@ -11,3 +11,4 @@ python-dotenv==1.0.1
 psutil==5.9.8
 GPUtil==1.4.0
 openai==1.10.0
+loguru==0.7.2

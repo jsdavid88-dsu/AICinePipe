@@ -2,9 +2,8 @@ import json
 import os
 import requests
 import asyncio
+from loguru import logger
 from ..models.job import Job, JobStatus
-
-# master/services/local_executor.py
 
 class LocalExecutor:
     def __init__(self, comfy_url="http://127.0.0.1:8188", workflow_dir="workflows"):
@@ -15,20 +14,20 @@ class LocalExecutor:
         """
         로컬 ComfyUI에 작업을 바로 큐잉합니다.
         """
-        print(f"[LocalExecutor] Executing Job {job.id} ({job.workflow_type})...")
+        logger.info(f"Executing Job {job.id} ({job.workflow_type})...")
         
         # 1. 템플릿 로드
         # workflow_type 예: "text_to_image/flux_basic"
         template_path = os.path.join(self.workflow_dir, f"{job.workflow_type}.json")
         if not os.path.exists(template_path):
-            print(f"Error: Workflow template not found at {template_path}")
+            logger.error(f"Workflow template not found at {template_path}")
             return False
 
         try:
             with open(template_path, 'r', encoding='utf-8') as f:
                 workflow = json.load(f)
         except Exception as e:
-            print(f"Error loading template: {e}")
+            logger.error(f"Error loading template: {e}")
             return False
 
         # 2. 파라미터 주입
@@ -40,10 +39,10 @@ class LocalExecutor:
             resp = requests.post(f"{self.comfy_url}/prompt", json=p)
             resp.raise_for_status()
             res_json = resp.json()
-            print(f"[LocalExecutor] Job {job.id} queued successfully. PID: {res_json.get('prompt_id')}")
+            logger.info(f"Job {job.id} queued successfully. PID: {res_json.get('prompt_id')}")
             return True
         except Exception as e:
-            print(f"[LocalExecutor] Failed to queue prompt: {e}")
+            logger.error(f"Failed to queue prompt: {e}")
             return False
 
     def _inject_params(self, workflow, params):

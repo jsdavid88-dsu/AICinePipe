@@ -2,6 +2,7 @@ import os
 import json
 import uuid
 from typing import List
+from loguru import logger
 from ..models.cinematic import CinematicOption
 from ..services.data_manager import DataManager
 
@@ -13,7 +14,7 @@ class PresetImporter:
 
     def scan_and_import(self) -> int:
         if not os.path.exists(REF_PRESETS_PATH):
-            print(f"Warning: Preset path not found: {REF_PRESETS_PATH}")
+            logger.warning(f"Preset path not found: {REF_PRESETS_PATH}")
             return 0
 
         count = 0
@@ -64,6 +65,6 @@ class PresetImporter:
                     pass
                 
             except Exception as e:
-                print(f"Failed to import {filename}: {e}")
+                logger.error(f"Failed to import {filename}: {e}")
         
         return count

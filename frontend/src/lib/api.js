@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 // 환경변수 기반 API URL (Vite 환경변수 또는 기본값)
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8002';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8100';
 
 const api = axios.create({
     baseURL: API_BASE_URL,

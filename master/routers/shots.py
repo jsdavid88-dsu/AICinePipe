@@ -155,17 +155,8 @@ async def export_shots(manager: DataManager = Depends(get_data_manager)):
     
     shots = manager.get_shots()
     if not shots:
-        return {"message": "No data to export"}
+        raise HTTPException(status_code=404, detail="No shots to export")
 
-    # Convert to DataFrame
-    data = [s.dict() for s in shots]
-    df = pd.DataFrame(data)
-    
-    # Select/Order columns for better UX
-    cols = ['id', 'scene_description', 'status', 'duration_seconds', 
-            'subjects_summary', 'env_location', 'tech_camera', 'tech_lens', 'tech_lighting', 
-            'created_at', 'updated_at']
-            
     # Flatten Data for Export
     export_data = []
     for s in shots:
@@ -188,7 +179,12 @@ async def export_shots(manager: DataManager = Depends(get_data_manager)):
         export_data.append(row)
         
     df = pd.DataFrame(export_data)
-    
+
+    # Select/Order columns for better UX
+    cols = ['id', 'scene_description', 'status', 'duration_seconds',
+            'subjects_summary', 'env_location', 'tech_camera', 'tech_lens', 'tech_lighting',
+            'created_at', 'updated_at']
+
     # Filter columns that exist
     cols = [c for c in cols if c in df.columns]
     df = df[cols]
@@ -261,7 +257,7 @@ async def import_shots(file: UploadFile = File(...), manager: DataManager = Depe
                 manager.add_shot(shot)
                 created_count += 1
             except Exception as e:
-                print(f"Skipping row {row.get('id')}: {e}")
+                logger.warning(f"Skipping row {row.get('id')}: {e}")
                 
     return {"message": "Import successful", "updated": updated_count, "created": created_count}
 

@@ -7,7 +7,7 @@ import os
 # 환경 변수 로드
 load_dotenv()
 
-# 새 로깅 시스템 사용
+# Logging and config (loguru setup runs on import)
 from .utils import logger, settings
 
 logger.info("Starting AI Production Pipeline Master Server...")
@@ -41,8 +41,8 @@ app.include_router(workers.router)
 app.include_router(websocket.router)
 
 # 프로젝트 정적 파일 서빙 (썸네일 등)
-os.makedirs("projects", exist_ok=True) # Ensure dir exists
-app.mount("/projects", StaticFiles(directory="projects"), name="projects")
+os.makedirs(settings.PROJECTS_DIR, exist_ok=True)
+app.mount("/projects", StaticFiles(directory=settings.PROJECTS_DIR), name="projects")
 
 # Mount 'ref' directory for cinematic presets images
 REF_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "ref")

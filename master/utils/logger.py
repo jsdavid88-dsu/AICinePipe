@@ -1,91 +1,64 @@
 """
-Logging Configuration for AIPipeline Master Server.
+Logging configuration for AIPipeline Master Server.
 
-Provides structured logging with rotation and consistent formatting.
+Uses loguru for structured logging with rotation and consistent formatting.
 """
 
-import logging
+import sys
 import os
-from logging.handlers import RotatingFileHandler
-from datetime import datetime
+from loguru import logger
+
+from .config import settings
 
 
-def setup_logger(
-    name: str = "aipipeline",
-    log_dir: str = None,
-    log_level: str = "INFO",
-    max_bytes: int = 10 * 1024 * 1024,  # 10MB
-    backup_count: int = 5
-) -> logging.Logger:
-    """
-    Sets up a logger with both console and file handlers.
-    
-    Args:
-        name: Logger name
-        log_dir: Directory for log files (defaults to project root)
-        log_level: Logging level (DEBUG, INFO, WARNING, ERROR, CRITICAL)
-        max_bytes: Max size per log file before rotation
-        backup_count: Number of backup files to keep
-    
-    Returns:
-        Configured logger instance
-    """
-    logger = logging.getLogger(name)
-    
-    # Prevent duplicate handlers
-    if logger.handlers:
-        return logger
-    
-    logger.setLevel(getattr(logging, log_level.upper(), logging.INFO))
-    
-    # Format
-    formatter = logging.Formatter(
-        fmt="%(asctime)s | %(levelname)-8s | %(name)s:%(funcName)s:%(lineno)d | %(message)s",
-        datefmt="%Y-%m-%d %H:%M:%S"
+def setup_logging() -> None:
+    """Configure loguru with console and file sinks."""
+    # Remove default handler
+    logger.remove()
+
+    log_level = settings.LOG_LEVEL.upper()
+
+    # Console sink
+    logger.add(
+        sys.stderr,
+        level=log_level,
+        format="<green>{time:YYYY-MM-DD HH:mm:ss}</green> | "
+               "<level>{level: <8}</level> | "
+               "<cyan>{name}</cyan>:<cyan>{function}</cyan>:<cyan>{line}</cyan> | "
+               "<level>{message}</level>",
+        colorize=True,
     )
-    
-    # Console Handler
-    console_handler = logging.StreamHandler()
-    console_handler.setLevel(logging.DEBUG)
-    console_handler.setFormatter(formatter)
-    logger.addHandler(console_handler)
-    
-    # File Handler (with rotation)
-    if log_dir is None:
-        log_dir = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
-    
+
+    # File sink with rotation
+    log_dir = settings.LOG_DIR
+    os.makedirs(log_dir, exist_ok=True)
     log_file = os.path.join(log_dir, "server.log")
-    
-    try:
-        file_handler = RotatingFileHandler(
-            log_file,
-            maxBytes=max_bytes,
-            backupCount=backup_count,
-            encoding="utf-8"
-        )
-        file_handler.setLevel(logging.INFO)
-        file_handler.setFormatter(formatter)
-        logger.addHandler(file_handler)
-    except Exception as e:
-        logger.warning(f"Could not create file handler: {e}")
-    
-    return logger
+
+    logger.add(
+        log_file,
+        level="DEBUG",
+        format="{time:YYYY-MM-DD HH:mm:ss} | {level: <8} | {name}:{function}:{line} | {message}",
+        rotation="10 MB",
+        retention="30 days",
+        compression="zip",
+        encoding="utf-8",
+    )
 
 
-# Singleton logger instance
-logger = setup_logger()
+# Run setup on import
+setup_logging()
 
 
-def get_logger(name: str = None) -> logging.Logger:
+def get_logger(name: str = None):
     """
-    Get a child logger with the given name.
-    
+    Get a contextualized logger.
+
     Args:
-        name: Optional child logger name (e.g., "worker", "api")
-    
+        name: Module name for context (e.g., "worker", "api")
+
     Returns:
-        Logger instance
+        Bound loguru logger
     """
     if name:
-        return logging.getLogger(f"aipipeline.{name}")
+        return logger.bind(name=name)
     return logger

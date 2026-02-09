@@ -85,7 +85,7 @@ class PromptEngine:
         triggers = []
         for char in characters:
             if char.use_lora and char.trigger_words:
-                triggers.extend(char.trigger_words)
+                triggers.extend([w.strip() for w in char.trigger_words.split(",") if w.strip()])
         
         if triggers:
             parts.append(", ".join(list(set(triggers))))

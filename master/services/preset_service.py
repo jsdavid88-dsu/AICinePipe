@@ -2,7 +2,8 @@ import json
 import os
 import glob
 from typing import List, Dict, Optional
-from ..models.shot import TechnicalSpecs 
+from loguru import logger
+from ..models.shot import TechnicalSpecs
 
 # Path to presets
 PRESETS_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "ref", "nano-banana-pro", "source_dump", "dist", "presets")
@@ -17,7 +18,7 @@ class PresetService:
         """Loads all JSON presets and maps images."""
         loaded = []
         if not os.path.exists(PRESETS_DIR):
-            print(f"Warning: Presets dir not found: {PRESETS_DIR}")
+            logger.warning(f"Presets dir not found: {PRESETS_DIR}")
             return
 
         json_files = glob.glob(os.path.join(PRESETS_DIR, "*.json"))
@@ -59,7 +60,7 @@ class PresetService:
                     }
                     loaded.append(preset)
             except Exception as e:
-                print(f"Failed to load preset {fpath}: {e}")
+                logger.error(f"Failed to load preset {fpath}: {e}")
                 
         self.presets_cache = loaded
 

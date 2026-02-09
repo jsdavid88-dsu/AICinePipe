@@ -1,15 +1,19 @@
+from .utils.config import settings
 from .services.data_manager import DataManager
 from .services.job_manager import JobManager
 from .services.local_executor import LocalExecutor
 from .services.worker_manager import WorkerManager
 from .services.workflow_analyzer import WorkflowAnalyzer
 
-# 전역 인스턴스
-data_manager = DataManager()
+# Global instances using config
+data_manager = DataManager(projects_root=settings.PROJECTS_DIR)
 worker_manager = WorkerManager()
 workflow_analyzer = WorkflowAnalyzer()
 job_manager = JobManager(data_manager)
-local_executor = LocalExecutor() # workflows dir assumed relative
+local_executor = LocalExecutor(
+    comfy_url=settings.COMFYUI_URL,
+    workflow_dir=settings.WORKFLOWS_DIR,
+)
 
 def get_data_manager() -> DataManager:
     return data_manager

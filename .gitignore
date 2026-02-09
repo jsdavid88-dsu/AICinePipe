@@ -25,6 +25,13 @@ shared_storage/*
 !shared_storage/.gitkeep
 brain/
 
+# Database & Logs
+data/*.db
+data/*.db-wal
+data/*.db-shm
+logs/
+*.log
+
 # ComfyUI / Worker
 worker/comfy_client.py.bak
 ref/

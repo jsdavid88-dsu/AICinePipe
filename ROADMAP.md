@@ -1,7 +1,7 @@
 # AIPipeline Tool — Master Roadmap
 
-**Date:** 2026-02-04
-**Version:** 2.0
+**Date:** 2026-02-10
+**Version:** 3.0
 **Author:** Dongseo University Virtual Convergence Technology Research Institute & Red Cat Gang Co., Ltd.
 
 ---
@@ -87,21 +87,22 @@ AI 영상 제작의 **모든 의사결정과 반복작업**을 웹에서 처리�
 
 ## Production Phases (상세)
 
-### Phase 0: Foundation — 기존 버그 수정 및 안정화
+### Phase 0: Foundation — 기존 버그 수정 및 안정화 ✅ COMPLETED (2026-02-10)
 > **현재 코드의 런타임 에러와 구조적 문제를 먼저 잡는다.**
 
-| # | Task | Detail | Priority |
-|---|------|--------|----------|
-| 0.1 | cinematics.py 런타임 버그 수정 | 미정의 변수 참조 (`routers/cinematics.py:17`) | CRITICAL |
-| 0.2 | Character 모델 필드 추가 | `use_lora`, `default_clothing` 필드 누락 → prompt_engine과 불일치 | CRITICAL |
-| 0.3 | shots.py export 함수 수정 | 미정의 `subjects` 변수 참조 (`routers/shots.py:92`) | CRITICAL |
-| 0.4 | ShotTable 중복 컬럼 제거 | `ShotTable.jsx:305-308` Subjects, Env 컬럼 이중 정의 | HIGH |
-| 0.5 | 환경변수 분리 | 하드코딩된 URL을 `.env`로 분리 (Master, ComfyUI, Frontend) | HIGH |
-| 0.6 | 에러 처리 개선 | `except Exception: pass` → 구체적 예외 + 로깅 | HIGH |
-| 0.7 | 구조화된 로깅 | `print()` → Python `logging` 모듈 전환 | HIGH |
-| 0.8 | GPU 감지 실패 처리 | 가짜 RTX 4090 데이터 대신 에러 상태 반환 | MEDIUM |
+| # | Task | Detail | Status |
+|---|------|--------|--------|
+| 0.1 | cinematics.py 런타임 버그 수정 | 검토 결과 이미 정상 | ✅ |
+| 0.2 | Character trigger_words 파싱 | `extend(string)` → `split(",")` 후 extend 수정 | ✅ |
+| 0.3 | ShotTable 중복 컬럼 | 검토 결과 이미 정상 | ✅ |
+| 0.4 | shots.py export 에러 처리 | 빈 데이터시 JSON 반환 → 404 HTTPException | ✅ |
+| 0.5 | 환경변수 분리 (.env) | `config.py`에 PROJECTS_DIR, DATABASE_PATH 등 추가 | ✅ |
+| 0.6 | 구조화된 로깅 (loguru) | 9개 파일 `print()` → loguru, 파일 로테이션 설정 | ✅ |
+| 0.7 | **JSON → SQLite 전환** | `master/db/database.py` + `migrations/001_initial.sql` 신규 | ✅ |
+| 0.8 | Job 영속성 (메모리→DB) | `job_manager.py` SQLite 전환 완료 | ✅ |
+| 0.9 | Worker 완료 보고 구현 | ComfyUI history 폴링 + job_completed/failed 메시지 | ✅ |
 
-**Milestone:** 서버가 에러 없이 기동되고, 기본 CRUD가 정상 동작한다.
+**Milestone:** ✅ 서버가 에러 없이 기동되고, 기본 CRUD가 정상 동작한다. (포트 8100)
 
 ---
 
@@ -491,19 +492,24 @@ Phase 8 ━━━━━━━━━━━━━━━━━━━━━━━━
 
 ## Current Status vs Target (개발 순서 기준)
 
-| Dev Order | Area | Current | Target | Phase |
+| Dev Order | Area | Current (v3.0) | Target | Phase |
 |-----------|------|---------|--------|-------|
-| 1st | 버그/안정성 | 런타임 에러 다수, print 로깅 | 에러 없이 기동, 구조화 로깅 | 0 |
-| 2nd | 샷리스트 편집 | 기본 테이블 (버그 있음) | Airtable급 편집 + 엑셀 왕복 | 2 |
-| 3rd | 데이터 구조 | 수동 | 컨펌 → 네이밍 컨벤션 자동 생성 | 3 |
-| 4th | 이미지 생성 | FLUX 기본만 | t2i + i2i + 이미지 편집 AI + 인페인팅 | 4 |
-| 4th | 프롬프트 | 기본 조립 | LoRA + 컨트롤넷 + 캐릭터/환경/스펙 완전 통합 | 4 |
-| 5th | 타임라인 | 스켈레톤 UI | 프록시 편집 + 드래그 리사이즈 + EDL 출력 | 5 |
-| 6th | DCC 연동 | 없음 | Blender 브릿지 + 플레이블라스트 왕복 | 6 |
-| 6th | AI 렌더 | 단일 워크플로우 | 멀티 모델 (WAN, LTX-2, SVI) + 우선순위 큐 | 6 |
-| 7th | 후처리 | 없음 | 프레임 보간 + 업스케일 + 포맷 변환 | 7 |
-| 8th | 시나리오 분석 | 없음 | LLM 자동 분석 → 캐릭터/샷/배경 분리 (편의) | 1 |
-| 병행 | 인프라 | 인메모리, 무인증 | DB + JWT + 워커 장애 복구 | 8 |
+| ~~1st~~ | ~~버그/안정성~~ | ✅ SQLite DB, loguru 로깅, 포트 8100 | ~~에러 없이 기동~~ | ~~0~~ |
+| **NEXT** | CPE 룰엔진 | 없음 | 56+검증규칙, 카메라/렌즈DB, 모델별 프롬프트 | 신규 |
+| **NEXT** | 렌더팜 강화 | 단일 워커 | 멀티노드 스케줄러, 그래프실행기, 파라미터패칭 | 신규 |
+| 3rd | LLM 멀티프로바이더 | 없음 | OpenAI/Anthropic/Ollama/Groq + 자동 프롬프트 | 신규 |
+| 4th | 샷리스트 편집 | 기본 테이블 | Airtable급 편집 + 엑셀 왕복 + 칸반보드 | 2 |
+| 5th | 데이터 구조 | 수동 | 컨펌 → 네이밍 컨벤션 자동 생성 | 3 |
+| 6th | 이미지 생성 | FLUX 기본만 | t2i + i2i + 이미지 편집 AI + 인페인팅 | 4 |
+| 6th | 프롬프트 | 기본 조립 | LoRA + 컨트롤넷 + 캐릭터/환경/스펙 완전 통합 | 4 |
+| 7th | 리뷰 시스템 | 없음 | 리뷰 플레이리스트 + 코멘트 + 실시간 협업 | 신규 |
+| 8th | 타임라인 | 스켈레톤 UI | 프록시 편집 + 드래그 리사이즈 + EDL 출력 | 5 |
+| 9th | DCC 연동 | 없음 | Blender 브릿지 + 플레이블라스트 왕복 | 6 |
+| 9th | AI 렌더 | 단일 워크플로우 | 멀티 모델 (WAN, LTX-2, SVI) + 우선순위 큐 | 6 |
+| 10th | 후처리 | 없음 | 프레임 보간 + 업스케일 + 포맷 변환 | 7 |
+| 11th | 시나리오 분석 | 없음 | LLM 자동 분석 → 캐릭터/샷/배경 분리 (편의) | 1 |
+| 12th | 대시보드/통계 | 없음 | 프로젝트 진행률, GPU 사용률, 워크로드 모니터링 | 신규 |
+| 병행 | 인프라 | SQLite WAL, 무인증 | PostgreSQL + JWT + 워커 장애 복구 | 8 |
 | 병행 | 테스트 | 없음 | Unit + Integration 테스트 | 8 |
 
 ---
@@ -555,4 +561,4 @@ Phase 8 ━━━━━━━━━━━━━━━━━━━━━━━━
 ---
 
 *This roadmap is a living document. Update as requirements evolve.*
-*Last updated: 2026-02-04*
+*Last updated: 2026-02-10*

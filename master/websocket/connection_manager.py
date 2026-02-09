@@ -1,6 +1,7 @@
 from typing import List, Dict
 from fastapi import WebSocket
 import json
+from loguru import logger
 
 class ConnectionManager:
     def __init__(self):
@@ -10,12 +11,12 @@ class ConnectionManager:
     async def connect(self, websocket: WebSocket, client_id: str):
         await websocket.accept()
         self.active_connections[client_id] = websocket
-        print(f"Worker connected: {client_id}")
+        logger.info(f"Worker connected: {client_id}")
 
     def disconnect(self, client_id: str):
         if client_id in self.active_connections:
             del self.active_connections[client_id]
-            print(f"Worker disconnected: {client_id}")
+            logger.info(f"Worker disconnected: {client_id}")
 
     async def send_personal_message(self, message: dict, client_id: str):
         if client_id in self.active_connections:

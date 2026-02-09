@@ -1,5 +1,6 @@
 from fastapi import APIRouter, HTTPException, Depends, Body
 from typing import List, Optional
+from loguru import logger
 from ..dependencies import get_job_manager, get_local_executor
 from ..services.job_manager import JobManager
 from ..services.prompt_engine import PromptEngine
@@ -67,7 +68,7 @@ async def create_job(
         if ws_manager.active_connections:
             # Pick first available worker
             worker_id = list(ws_manager.active_connections.keys())[0]
-            print(f"Dispatching job {job.id} to worker {worker_id}")
+            logger.info(f"Dispatching job {job.id} to worker {worker_id}")
             
             await ws_manager.send_personal_message({
                 "type": "job_assign",
@@ -80,7 +81,7 @@ async def create_job(
         
         # 3. Fallback: Local Execution
         if not worker_found:
-            print("No workers available. Attempting local execution...")
+            logger.warning("No workers available. Attempting local execution...")
             success = local_exec.execute_job(job)
             if success:
                 manager.update_job_status(job.id, JobStatus.RUNNING, "Started locally")
@@ -89,9 +90,7 @@ async def create_job(
                  
         return job
     except Exception as e:
-        # print stack trace
-        import traceback
-        traceback.print_exc()
+        logger.exception(f"Job creation failed: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.get("/{job_id}", response_model=Job)

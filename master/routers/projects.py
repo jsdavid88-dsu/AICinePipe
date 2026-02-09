@@ -1,6 +1,7 @@
 from fastapi import APIRouter, HTTPException, Depends, Body
 from typing import List, Dict
 import os
+from loguru import logger
 from ..dependencies import get_data_manager
 from ..services.data_manager import DataManager
 
@@ -21,7 +22,7 @@ async def create_project(
         if not re.match(r"^[a-zA-Z0-9_-]+$", project_id):
              raise HTTPException(status_code=400, detail="Invalid project ID. Use alphanumeric, _, - only.")
 
-        print(f"[DEBUG] Creating project: {project_id}")
+        logger.debug(f"Creating project: {project_id}")
         success = manager.create_project(project_id)
         if not success:
             raise HTTPException(status_code=409, detail=f"Project {project_id} already exists")
@@ -38,8 +39,7 @@ async def create_project(
     except HTTPException:
         raise
     except Exception as e:
-        import traceback
-        traceback.print_exc()
+        logger.exception(f"Create project failed: {e}")
         raise HTTPException(status_code=500, detail=f"Create Failed: {str(e)}")
 
 from fastapi import UploadFile, File
@@ -87,8 +87,7 @@ async def list_projects(manager: DataManager = Depends(get_data_manager)):
                    if os.path.isdir(os.path.join(manager.projects_root, d))]
         return projects
     except Exception as e:
-        import traceback
-        traceback.print_exc()
+        logger.exception(f"List projects failed: {e}")
         raise HTTPException(status_code=500, detail=f"List Projects Failed: {str(e)}")
 
 
