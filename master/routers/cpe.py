@@ -5,11 +5,12 @@ Endpoints for validating cin configurations, generating prompts,
 listing/applying presets, and querying available options.
 """
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel, Field
 from typing import Optional
 
 from ..models.cinema_enums import (
+    FilmStock,
     LiveActionConfig,
     AnimationConfig,
     ProjectType,
@@ -17,12 +18,10 @@ from ..models.cinema_enums import (
     VisualGrammar,
 )
 from ..services.rule_engine import RuleEngine
+from ..dependencies import get_rule_engine
 from ..utils import logger
 
 router = APIRouter(prefix="/api/cpe", tags=["Cinema Prompt Engineering"])
-
-# Singleton rule engine
-_rule_engine = RuleEngine()
 
 
 # =============================================================================
@@ -76,34 +75,34 @@ class RuleCountResponse(BaseModel):
 # =============================================================================
 
 @router.get("/health")
-async def cpe_health():
+async def cpe_health(rule_engine: RuleEngine = Depends(get_rule_engine)):
     """CPE engine health check."""
-    counts = _rule_engine.get_rule_count()
+    counts = rule_engine.get_rule_count()
     return {
         "status": "ok",
         "rule_count": counts,
         "preset_count": {
-            "live_action": len(_rule_engine.list_presets()["live_action"]),
-            "animation": len(_rule_engine.list_presets()["animation"]),
+            "live_action": len(rule_engine.list_presets()["live_action"]),
+            "animation": len(rule_engine.list_presets()["animation"]),
         }
     }
 
 
 @router.post("/validate", response_model=ValidationResult)
-async def validate_config(request: ValidateRequest):
+async def validate_config(request: ValidateRequest, rule_engine: RuleEngine = Depends(get_rule_engine)):
     """Validate a cinema configuration against all rules."""
     if request.project_type == ProjectType.LIVE_ACTION:
         config = request.live_action or LiveActionConfig()
-        result = _rule_engine.validate_live_action(config)
+        result = rule_engine.validate_live_action(config)
     else:
         config = request.animation or AnimationConfig()
-        result = _rule_engine.validate_animation(config)
+        result = rule_engine.validate_animation(config)
 
     return result
 
 
 @router.post("/generate-prompt", response_model=GeneratePromptResponse)
-async def generate_prompt(request: GeneratePromptRequest):
+async def generate_prompt(request: GeneratePromptRequest, rule_engine: RuleEngine = Depends(get_rule_engine)):
     """Generate a cinematic prompt based on configuration."""
 
     tags = []
@@ -113,7 +112,7 @@ async def generate_prompt(request: GeneratePromptRequest):
         config = request.live_action or LiveActionConfig()
 
         # Validate first
-        validation = _rule_engine.validate_live_action(config)
+        validation = rule_engine.validate_live_action(config)
 
         # Build prompt tags from configuration
         # Camera & Lens
@@ -128,7 +127,7 @@ async def generate_prompt(request: GeneratePromptRequest):
             tags.append("lens flare")
 
         # Film stock
-        if config.camera.film_stock.value != "None":
+        if config.camera.film_stock != FilmStock.NONE:
             stock_name = config.camera.film_stock.value.replace("_", " ")
             tags.append(f"shot on {stock_name}")
             tags.append("film grain")
@@ -188,7 +187,7 @@ async def generate_prompt(request: GeneratePromptRequest):
 
     else:
         config = request.animation or AnimationConfig()
-        validation = _rule_engine.validate_animation(config)
+        validation = rule_engine.validate_animation(config)
 
         # Animation prompt building
         medium_name = config.medium.value
@@ -240,24 +239,24 @@ async def generate_prompt(request: GeneratePromptRequest):
 
 
 @router.get("/presets", response_model=PresetListResponse)
-async def list_presets():
+async def list_presets(rule_engine: RuleEngine = Depends(get_rule_engine)):
     """List all available cinema presets."""
-    return _rule_engine.list_presets()
+    return rule_engine.list_presets()
 
 
 @router.get("/presets/{preset_id}")
-async def get_preset(preset_id: str):
+async def get_preset(preset_id: str, rule_engine: RuleEngine = Depends(get_rule_engine)):
     """Get a specific preset by ID."""
-    preset = _rule_engine.get_preset(preset_id)
+    preset = rule_engine.get_preset(preset_id)
     if not preset:
         raise HTTPException(status_code=404, detail=f"Preset '{preset_id}' not found")
     return preset
 
 
 @router.post("/apply-preset")
-async def apply_preset(request: ApplyPresetRequest):
+async def apply_preset(request: ApplyPresetRequest, rule_engine: RuleEngine = Depends(get_rule_engine)):
     """Apply a preset and return the configured result with validation."""
-    preset = _rule_engine.get_preset(request.preset_id)
+    preset = rule_engine.get_preset(request.preset_id)
     if not preset:
         raise HTTPException(status_code=404, detail=f"Preset '{request.preset_id}' not found")
 
@@ -272,9 +271,9 @@ async def apply_preset(request: ApplyPresetRequest):
 
 
 @router.get("/rules/count", response_model=RuleCountResponse)
-async def get_rule_count():
+async def get_rule_count(rule_engine: RuleEngine = Depends(get_rule_engine)):
     """Get the count of validation rules by severity."""
-    return _rule_engine.get_rule_count()
+    return rule_engine.get_rule_count()
 
 
 @router.get("/enums/{enum_name}")

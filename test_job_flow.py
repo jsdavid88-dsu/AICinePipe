@@ -1,8 +1,9 @@
 import requests
 import json
 import time
+import os
 
-API_URL = "http://localhost:8002"
+API_URL = os.getenv("API_URL", "http://localhost:8002")
 
 def create_job():
     print("Creating test job...")

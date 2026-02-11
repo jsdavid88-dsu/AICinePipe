@@ -1,13 +1,10 @@
 import json
 import os
 import random
-import sys
 from comfy_client import ComfyClient
 
-# Add parent directory to path for master package imports
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
-
 try:
+    # Available when worker is co-located with master (dev mode)
     from master.services.parameter_patcher import ParameterPatcher
     _patcher = ParameterPatcher()
     _HAS_PATCHER = True

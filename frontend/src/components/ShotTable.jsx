@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { MoreHorizontal, Plus, Camera, MapPin, Users, Settings, Play, Upload, Download, LayoutGrid, List as ListIcon, ChevronDown, MessageSquare, X, Send, FolderOpen, Lock } from 'lucide-react';
-import { shotApi, characterApi, cinematicApi } from '../lib/api';
+import { shotApi, characterApi, cinematicApi, jobApi } from '../lib/api';
 import SubjectSelector from './SubjectSelector';
 import CinematicSelector from './CinematicSelector';
 import EnvironmentSelector from './EnvironmentSelector';

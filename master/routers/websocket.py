@@ -10,6 +10,21 @@ import json
 router = APIRouter(tags=["websocket"])
 
 
+def _map_gpu_data(raw_gpus: list[dict]) -> list[dict]:
+    """Translate worker agent GPU keys to Scheduler-expected format.
+
+    Agent sends: memory_total (MB), memory_used (MB), load (%), temperature (C)
+    Scheduler expects: memory_total_mb, memory_used_mb
+    """
+    return [
+        {
+            "memory_total_mb": g.get("memory_total", 0),
+            "memory_used_mb": g.get("memory_used", 0),
+        }
+        for g in raw_gpus
+    ]
+
+
 @router.websocket("/ws/{client_id}")
 async def websocket_endpoint(
     websocket: WebSocket,
@@ -28,39 +43,17 @@ async def websocket_endpoint(
 
                 if msg_type == "heartbeat":
                     client_ip = websocket.client.host if websocket.client else "127.0.0.1"
-                    # Parse using WorkerManager to get WorkerNode logic (optional, but good for consistent parsing)
-                    # Although Scheduler uses WorkerInfo. Let's map it.
                     
                     # 1. Update WorkerManager (Stats/Monitoring)
-                    # Note: WorkerManager.parse_heartbeat_message returns WorkerNode model
                     worker_node = worker_manager.parse_heartbeat_message(client_id, msg, client_ip)
                     worker_manager.register_worker(worker_node)
                     
                     # 2. Register with Scheduler (Job Assignment)
                     from ..services.scheduler import WorkerInfo
                     
-                    # Map WorkerNode (or raw msg) to WorkerInfo
-                    # WorkerInfo needs: worker_id, name, host, port, gpus, status, etc.
-                    
                     info = msg.get("info", {})
                     gpus = info.get("gpus", [])
-                    
-                    # Ensure GPUs data format matches what Scheduler expects (list of dicts)
-                    # Scheduler access: gpu.get("memory_total_mb")
-                    # Msg format: [{"id": 0, "name":..., "memory_total":...}] (from worker/agent.py)
-                    # Agent sends "memory_total" (MB), Scheduler expects "memory_total_mb".
-                    # Let's align. Agent: "memory_total": 24576. 
-                    # Scheduler: gpu.get("memory_total_mb", 0).
-                    # Wait, let's fix the key or mapping here.
-                    
-                    mapped_gpus = []
-                    for g in gpus:
-                        # Agent sends: memory_total (MB), memory_used (MB), load (%), temperature (C)
-                        # Scheduler needs: memory_total_mb, memory_used_mb
-                        mapped_gpus.append({
-                            "memory_total_mb": g.get("memory_total", 0),
-                            "memory_used_mb": g.get("memory_used", 0)
-                        })
+                    mapped_gpus = _map_gpu_data(gpus)
                         
                     worker_info = WorkerInfo(
                         worker_id=client_id,
@@ -72,7 +65,6 @@ async def websocket_endpoint(
                         is_simulated=False
                     )
                     
-                    # Await registration (triggers check_for_pending_jobs)
                     await scheduler.register_worker(worker_info)
 
                 elif msg_type == "job_started":

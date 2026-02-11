@@ -81,7 +81,7 @@ class ParameterPatcher:
                 inputs["denoise"] = denoise
 
         # Patch dimensions (find EmptyLatentImage or similar)
-        if width or height:
+        if width is not None or height is not None:
             for param in analysis.parameters:
                 if param.role == "width" and width:
                     node = workflow_json.get(param.node_id, {})

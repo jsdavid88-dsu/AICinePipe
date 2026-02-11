@@ -71,6 +71,19 @@ class JobManager:
         )
         return self._row_to_job(row) if row else None
 
+    def requeue_job(self, job: Job) -> None:
+        """Re-queue a job that failed to be scheduled.
+
+        Since jobs are DB-backed and get_pending_job() is a read (not pop),
+        the job is already safe in the database. This logs the event for
+        observability and ensures the job remains PENDING.
+        """
+        if job.status != JobStatus.PENDING:
+            job.status = JobStatus.PENDING
+            job.assigned_worker_id = None
+            self._save_job(job)
+        logger.info(f"Job {job.id} re-queued (no worker available)")
+
     def assign_job(self, job_id: str, worker_id: str):
         job = self.get_job(job_id)
         if job and job.status == JobStatus.PENDING:

@@ -5,9 +5,10 @@ Replaces the simple FIFO queue with intelligent backend selection
 based on VRAM requirements, worker health, and load balancing.
 """
 
+import asyncio
 from typing import Optional
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import datetime, timezone
 
 from ..utils import logger
 from ..models.job import Job
@@ -89,11 +90,13 @@ class Scheduler:
 
     def __init__(self):
         self._workers: dict[str, WorkerInfo] = {}
+        self._lock = asyncio.Lock()
         logger.info("Scheduler initialized with VRAM-aware assignment")
 
     async def register_worker(self, worker: WorkerInfo) -> None:
         """Register or update a worker."""
-        self._workers[worker.worker_id] = worker
+        async with self._lock:
+            self._workers[worker.worker_id] = worker
         logger.info(
             f"Worker registered: {worker.name} ({worker.worker_id}) "
             f"— {worker.total_vram_gb:.1f}GB VRAM"
@@ -107,12 +110,6 @@ class Scheduler:
         from ..dependencies import get_job_manager
         job_manager = get_job_manager()
         
-        # Simple loop: get pending job, try to schedule
-        # In a real system, this might be more complex (batch processing)
-        
-        # Prevent infinite loop if no workers match
-        # Limit to checking 5 jobs or until no assignment
-        
         for _ in range(5):
             job = job_manager.get_pending_job()
             if not job:
@@ -120,17 +117,17 @@ class Scheduler:
                 
             worker = await self.schedule_job(job)
             if not worker:
-                # If we couldn't schedule the top priority job, 
-                # we might be blocked. For now, stop.
-                # Future: Logic to skip to next job if resources allow
+                # Re-queue the job so it isn't lost
+                job_manager.requeue_job(job)
                 break
 
-    def unregister_worker(self, worker_id: str) -> None:
+    async def unregister_worker(self, worker_id: str) -> None:
         """Remove a worker from the pool."""
-        if worker_id in self._workers:
-            name = self._workers[worker_id].name
-            del self._workers[worker_id]
-            logger.info(f"Worker unregistered: {name} ({worker_id})")
+        async with self._lock:
+            if worker_id in self._workers:
+                name = self._workers[worker_id].name
+                del self._workers[worker_id]
+                logger.info(f"Worker unregistered: {name} ({worker_id})")
 
     async def schedule_job(self, job: Job) -> Optional[WorkerInfo]:
         """
@@ -185,7 +182,7 @@ class Scheduler:
         if not worker:
             return
         worker.status = status
-        worker.last_heartbeat = datetime.utcnow()
+        worker.last_heartbeat = datetime.now(timezone.utc)
         if gpus is not None:
             worker.gpus = gpus
         if current_job_id is not None:
@@ -209,7 +206,7 @@ class Scheduler:
         )
 
         candidates = []
-        for worker in self._workers.values():
+        for worker in list(self._workers.values()):
             if not worker.is_available:
                 continue
 

@@ -6,7 +6,7 @@ and marks jobs for reassignment.
 """
 
 import asyncio
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Optional, Callable
 
 from ..utils import logger
@@ -64,7 +64,7 @@ class HealthMonitor:
 
     async def _check_all_workers(self):
         """Check all registered workers."""
-        now = datetime.utcnow()
+        now = datetime.now(timezone.utc)
         workers = self._scheduler.get_all_workers()
 
         for worker in workers:

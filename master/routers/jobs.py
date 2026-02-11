@@ -67,7 +67,7 @@ async def create_job(
         try:
             allocated_worker = await scheduler.schedule_job(job)
             if allocated_worker:
-                logger.info(f"Scheduler assigned job {job.id} to {allocated_worker.id}")
+                logger.info(f"Scheduler assigned job {job.id} to {allocated_worker.worker_id}")
                 manager.update_job_status(job.id, JobStatus.ASSIGNED)
             else:
                 logger.warning(f"No suitable worker found for job {job.id}. Queued.")

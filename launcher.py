@@ -1,7 +1,6 @@
 import subprocess
 import time
 import os
-import signal
 import sys
 import psutil
 from threading import Thread

@@ -301,7 +301,8 @@ class LLMService:
         try:
             async with httpx.AsyncClient(timeout=self._config.timeout) as client:
                 resp = await client.post(
-                    f"{url}/models/{model}:generateContent?key={self._config.api_key or ''}",
+                    f"{url}/models/{model}:generateContent",
+                    headers={"x-goog-api-key": self._config.api_key or ""},
                     json=payload,
                 )
                 resp.raise_for_status()
