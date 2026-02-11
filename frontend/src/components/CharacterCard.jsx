@@ -1,12 +1,13 @@
 import React from 'react';
 import { MoreVertical, Edit2, Trash2, Image as ImageIcon } from 'lucide-react';
+import { API_BASE_URL } from '../lib/api';
 
 const CharacterCard = ({ character, onEdit, onDelete, onImageClick }) => {
     // Thumbnail Path Construction
     // Assuming backend returns absolute URL or we prepend base
     // But our API returns /projects/... which is relative to server root
-    // We need to prepend http://localhost:8000 (or config)
-    const backendUrl = "http://localhost:8000"; // TODO: Use env
+    // We need to prepend API_BASE_URL
+    const backendUrl = API_BASE_URL;
     const imageUrl = character.thumbnail
         ? `${backendUrl}${character.thumbnail}`
         : null;

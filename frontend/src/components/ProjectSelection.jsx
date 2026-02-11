@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, Film, X, Upload } from 'lucide-react';
-import { projectApi } from '../lib/api';
+import { projectApi, API_BASE_URL } from '../lib/api';
 
 const CreateProjectModal = ({ onClose, onSuccess }) => {
     const [name, setName] = useState('');
@@ -122,7 +122,7 @@ const ProjectCard = ({ name, onSelect }) => (
         >
             {/* Thumbnail: Try to load from static path */}
             <img
-                src={`http://localhost:8000/projects/${name}/assets/thumbnail.png`}
+                src={`${API_BASE_URL}/projects/${name}/assets/thumbnail.png`}
                 onError={(e) => {
                     e.target.onerror = null;
                     e.target.parentElement.classList.add('bg-gradient-to-br', 'from-blue-900/20', 'to-purple-900/20');

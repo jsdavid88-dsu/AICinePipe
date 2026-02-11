@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 // 환경변수 기반 API URL (Vite 환경변수 또는 기본값)
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8100';
+export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8002';
 
 const api = axios.create({
     baseURL: API_BASE_URL,
@@ -64,6 +64,18 @@ export const workerApi = {
     register: (worker) => api.post('/workers/register', worker),
     heartbeat: (id) => api.post(`/workers/${id}/heartbeat`),
     delete: (id) => api.delete(`/workers/${id}`),
+};
+
+export const cpeApi = {
+    health: () => api.get('/api/cpe/health'),
+    validate: (config) => api.post('/api/cpe/validate', config),
+    generatePrompt: (config) => api.post('/api/cpe/generate-prompt', config),
+    listPresets: () => api.get('/api/cpe/presets'),
+    getPreset: (id) => api.get(`/api/cpe/presets/${id}`),
+    applyPreset: (data) => api.post('/api/cpe/apply-preset', data),
+    listEnums: () => api.get('/api/cpe/enums'),
+    getEnum: (name) => api.get(`/api/cpe/enums/${name}`),
+    ruleCount: () => api.get('/api/cpe/rules/count'),
 };
 
 

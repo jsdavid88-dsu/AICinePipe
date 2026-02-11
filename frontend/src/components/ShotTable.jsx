@@ -240,9 +240,50 @@ const ShotTable = ({ projectId, onShotSelect }) => {
 
     const handleGenerate = async (shot) => {
         if (!projectId) return;
+
+        // Optimistic UI update
         handleCellUpdate(shot.id, 'status', 'queued');
-        // Job creation logic...
-        // For now, no changes here
+
+        try {
+            // Construct Job Payload
+            const jobData = {
+                project_id: projectId,
+                shot_id: shot.id,
+                workflow_type: shot.workflow_type || "text_to_image",
+                params: {
+                    // Core Prompt
+                    scene_description: shot.scene_description,
+                    action: shot.action,
+                    dialogue: shot.dialogue,
+
+                    // Technical / Cinematic
+                    camera: shot.technical?.camera,
+                    film_stock: shot.technical?.film_stock,
+                    lens: shot.technical?.lens,
+                    lighting: shot.technical?.lighting,
+                    aspect_ratio: shot.technical?.aspect_ratio,
+
+                    // Environment
+                    location: shot.environment?.location,
+                    time_of_day: shot.environment?.time_of_day,
+                    weather: shot.environment?.weather,
+
+                    // Generation Control
+                    seed: shot.seed,
+                    duration: shot.duration_seconds || 2.0,
+                    frame_count: shot.frame_count || 48
+                }
+            };
+
+            console.log("Submitting Job:", jobData);
+            await jobApi.create(jobData);
+
+            // Note: Use a global toast or status indicator in real app
+        } catch (err) {
+            console.error("Job creation failed", err);
+            handleCellUpdate(shot.id, 'status', 'failed');
+            alert("Failed to start job: " + (err.response?.data?.detail || err.message));
+        }
     };
 
     const handleExport = async () => {

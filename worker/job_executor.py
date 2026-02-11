@@ -1,7 +1,20 @@
 import json
 import os
 import random
+import sys
 from comfy_client import ComfyClient
+
+# Add parent directory to path for master package imports
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
+
+try:
+    from master.services.parameter_patcher import ParameterPatcher
+    _patcher = ParameterPatcher()
+    _HAS_PATCHER = True
+except ImportError:
+    _patcher = None
+    _HAS_PATCHER = False
+
 
 class JobExecutor:
     def __init__(self, comfy_client: ComfyClient, workflow_dir: str = "../workflows"):
@@ -9,21 +22,21 @@ class JobExecutor:
         self.workflow_dir = workflow_dir
 
     def execute_job(self, job_data: dict, client_id: str):
-        # 1. 템플릿 로드
+        # 1. Load workflow template
         workflow_type = job_data.get("workflow_type", "text_to_image/flux_basic")
         template_path = os.path.join(self.workflow_dir, f"{workflow_type}.json")
-        
+
         if not os.path.exists(template_path):
             raise FileNotFoundError(f"Workflow template not found: {template_path}")
-            
+
         with open(template_path, 'r', encoding='utf-8') as f:
             workflow = json.load(f)
-            
-        # 2. 파라미터 주입 (간단한 매핑 로직)
+
+        # 2. Inject parameters using ParameterPatcher (connection-aware)
         params = job_data.get("params", {})
         self._inject_params(workflow, params)
-        
-        # 3. 실행 요청
+
+        # 3. Queue prompt
         print(f"Queuing prompt for job {job_data.get('id')}...")
         try:
             resp = self.client.queue_prompt(workflow, client_id)
@@ -34,16 +47,46 @@ class JobExecutor:
             raise
 
     def _inject_params(self, workflow, params):
-        # ComfyUI API Format: "NodeID": { "inputs": { ... }, "class_type": ... }
-        # 템플릿 구조에 따라 파싱. 여기서는 'prompt' 키워드를 찾아서 주입하는 단순 로직 예시
-        
+        """
+        Inject runtime parameters into a ComfyUI workflow.
+
+        Uses ParameterPatcher which traces KSampler connections to correctly
+        route positive and negative prompts to the right CLIPTextEncode nodes.
+        Falls back to legacy node-ID-based injection if patcher unavailable.
+        """
+        if _HAS_PATCHER:
+            _patcher.patch(
+                workflow,
+                positive_prompt=params.get("prompt", ""),
+                negative_prompt=params.get("negative_prompt", ""),
+                seed=params.get("seed"),
+                width=params.get("width"),
+                height=params.get("height"),
+                steps=params.get("steps"),
+                cfg=params.get("cfg"),
+                denoise=params.get("denoise"),
+                lora_name=params.get("lora_name"),
+                lora_strength=params.get("lora_strength"),
+                filename_prefix=params.get("filename_prefix"),
+            )
+        else:
+            # Legacy fallback: basic node-type matching
+            self._inject_params_legacy(workflow, params)
+
+        return workflow
+
+    def _inject_params_legacy(self, workflow, params):
+        """Legacy parameter injection (no connection tracing)."""
         positive_prompt = params.get("prompt", "")
+        negative_prompt = params.get("negative_prompt", "")
         seed = params.get("seed", random.randint(0, 1000000000))
-        
+
+        prompt_nodes_found = []
+
         for node_id, node in workflow.items():
             class_type = node.get("class_type", "")
             inputs = node.get("inputs", {})
-            
+
             # KSampler Seed
             if "KSampler" in class_type or "Seed" in class_type:
                 if "seed" in inputs:
@@ -51,19 +94,17 @@ class JobExecutor:
                 if "noise_seed" in inputs:
                     inputs["noise_seed"] = seed
 
-            # Text Prompts (Primitive 방식, 노드 타이틀이나 클래스로 구분 필요)
-            # 여기서는 편의상 inputs에 'text'가 있고, CLIPTextEncode 인 경우를 찾음
-            if class_type == "CLIPTextEncode":
-                # 긍정 프롬프트 (Node Title이나 ID로 구분해야 완벽하지만, 일단 첫번째/두번째 구분 없이 다 넣음 -> 개선 필요)
-                # 실제로는 템플릿의 특정 노드 ID를 고정해서 쓰는게 좋음 (ex: Node 6 is Positive, Node 7 is Negative)
-                if isinstance(inputs.get("text"), str):
-                     # 임시: 모든 텍스트 인코더에 같은 프롬프트 넣음 (테스트용)
-                     # TODO: Implement Node ID mapping from params
-                    inputs["text"] = positive_prompt
-                    
+            # CLIPTextEncode — collect for ordered assignment
+            if class_type == "CLIPTextEncode" and isinstance(inputs.get("text"), str):
+                prompt_nodes_found.append((node_id, inputs))
+
             # Checkpoint Loader
             if class_type == "CheckpointLoaderSimple":
                 if "ckpt_name" in params:
                     inputs["ckpt_name"] = params["ckpt_name"]
 
-        return workflow
+        # Assign prompts: first text node = positive, second = negative
+        if len(prompt_nodes_found) >= 1 and positive_prompt:
+            prompt_nodes_found[0][1]["text"] = positive_prompt
+        if len(prompt_nodes_found) >= 2 and negative_prompt:
+            prompt_nodes_found[1][1]["text"] = negative_prompt

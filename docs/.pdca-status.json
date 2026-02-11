@@ -1,0 +1,349 @@
+{
+  "version": "2.0",
+  "lastUpdated": "2026-02-09T19:06:16.802Z",
+  "activeFeatures": [
+    "master",
+    "worker",
+    "websocket",
+    "db",
+    "frontend"
+  ],
+  "primaryFeature": "master",
+  "features": {
+    "master": {
+      "phase": "do",
+      "phaseNumber": 3,
+      "matchRate": null,
+      "iterationCount": 0,
+      "requirements": [],
+      "documents": {},
+      "timestamps": {
+        "started": "2026-02-09T18:21:09.725Z",
+        "lastUpdated": "2026-02-09T18:44:53.063Z"
+      },
+      "lastFile": "Z:\\Antigravity_prj\\3D_Comfy_RnD\\AIPipeline_tool\\master\\services\\filesystem_service.py"
+    },
+    "worker": {
+      "phase": "do",
+      "phaseNumber": 3,
+      "matchRate": null,
+      "iterationCount": 0,
+      "requirements": [],
+      "documents": {},
+      "timestamps": {
+        "started": "2026-02-09T18:23:18.545Z",
+        "lastUpdated": "2026-02-09T18:23:18.545Z"
+      },
+      "lastFile": "Z:\\Antigravity_prj\\3D_Comfy_RnD\\AIPipeline_tool\\worker\\agent.py"
+    },
+    "websocket": {
+      "phase": "do",
+      "phaseNumber": 3,
+      "matchRate": null,
+      "iterationCount": 0,
+      "requirements": [],
+      "documents": {},
+      "timestamps": {
+        "started": "2026-02-09T18:30:51.880Z",
+        "lastUpdated": "2026-02-09T18:30:51.880Z"
+      },
+      "lastFile": "Z:\\Antigravity_prj\\3D_Comfy_RnD\\AIPipeline_tool\\master\\websocket\\connection_manager.py"
+    },
+    "db": {
+      "phase": "do",
+      "phaseNumber": 3,
+      "matchRate": null,
+      "iterationCount": 0,
+      "requirements": [],
+      "documents": {},
+      "timestamps": {
+        "started": "2026-02-09T18:40:16.618Z",
+        "lastUpdated": "2026-02-09T18:40:40.203Z"
+      },
+      "lastFile": "Z:\\Antigravity_prj\\3D_Comfy_RnD\\AIPipeline_tool\\master\\db\\database.py"
+    },
+    "frontend": {
+      "phase": "do",
+      "phaseNumber": 3,
+      "matchRate": null,
+      "iterationCount": 0,
+      "requirements": [],
+      "documents": {},
+      "timestamps": {
+        "started": "2026-02-09T19:06:15.015Z",
+        "lastUpdated": "2026-02-09T19:06:16.801Z"
+      },
+      "lastFile": "Z:\\Antigravity_prj\\3D_Comfy_RnD\\AIPipeline_tool\\frontend\\src\\lib\\api.js"
+    }
+  },
+  "pipeline": {
+    "currentPhase": 1,
+    "level": "Dynamic",
+    "phaseHistory": []
+  },
+  "session": {
+    "startedAt": "2026-02-09T17:41:48.545Z",
+    "onboardingCompleted": false,
+    "lastActivity": "2026-02-09T19:06:16.802Z"
+  },
+  "history": [
+    {
+      "timestamp": "2026-02-09T18:21:09.725Z",
+      "feature": "master",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-09T18:21:21.407Z",
+      "feature": "master",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-09T18:23:11.335Z",
+      "feature": "master",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-09T18:23:18.545Z",
+      "feature": "worker",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-09T18:23:51.513Z",
+      "feature": "master",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-09T18:27:46.726Z",
+      "feature": "master",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-09T18:28:06.501Z",
+      "feature": "master",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-09T18:28:48.805Z",
+      "feature": "master",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-09T18:30:02.011Z",
+      "feature": "master",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-09T18:30:25.000Z",
+      "feature": "master",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-09T18:30:51.880Z",
+      "feature": "websocket",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-09T18:31:02.302Z",
+      "feature": "master",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-09T18:31:12.674Z",
+      "feature": "master",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-09T18:31:24.413Z",
+      "feature": "master",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-09T18:31:31.962Z",
+      "feature": "master",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-09T18:31:41.266Z",
+      "feature": "master",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-09T18:31:50.157Z",
+      "feature": "master",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-09T18:31:55.887Z",
+      "feature": "master",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-09T18:33:38.206Z",
+      "feature": "master",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-09T18:34:08.300Z",
+      "feature": "master",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-09T18:34:53.734Z",
+      "feature": "master",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-09T18:35:02.967Z",
+      "feature": "master",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-09T18:35:11.449Z",
+      "feature": "master",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-09T18:35:24.369Z",
+      "feature": "master",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-09T18:35:32.932Z",
+      "feature": "master",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-09T18:36:03.132Z",
+      "feature": "master",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-09T18:36:10.393Z",
+      "feature": "master",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-09T18:36:35.255Z",
+      "feature": "master",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-09T18:36:50.142Z",
+      "feature": "master",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-09T18:37:23.959Z",
+      "feature": "master",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-09T18:37:36.848Z",
+      "feature": "master",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-09T18:38:41.349Z",
+      "feature": "master",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-09T18:38:49.176Z",
+      "feature": "master",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-09T18:39:12.108Z",
+      "feature": "master",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-09T18:40:16.618Z",
+      "feature": "db",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-09T18:40:40.203Z",
+      "feature": "db",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-09T18:42:09.095Z",
+      "feature": "master",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-09T18:43:59.310Z",
+      "feature": "master",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-09T18:44:19.344Z",
+      "feature": "master",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-09T18:44:29.549Z",
+      "feature": "master",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-09T18:44:53.063Z",
+      "feature": "master",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-09T19:06:15.015Z",
+      "feature": "frontend",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-09T19:06:16.802Z",
+      "feature": "frontend",
+      "phase": "do",
+      "action": "updated"
+    }
+  ]
+}

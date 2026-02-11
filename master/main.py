@@ -12,7 +12,7 @@ from .utils import logger, settings
 
 logger.info("Starting AI Production Pipeline Master Server...")
 
-from .routers import shots, jobs, workers, websocket, projects, characters, cinematics
+from .routers import shots, jobs, workers, websocket, projects, characters, cinematics, cpe
 
 app = FastAPI(
     title="AI Production Pipeline Master Server",
@@ -39,6 +39,7 @@ app.include_router(shots.router)
 app.include_router(jobs.router)
 app.include_router(workers.router)
 app.include_router(websocket.router)
+app.include_router(cpe.router)
 
 # 프로젝트 정적 파일 서빙 (썸네일 등)
 os.makedirs(settings.PROJECTS_DIR, exist_ok=True)

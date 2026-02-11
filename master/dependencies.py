@@ -5,6 +5,14 @@ from .services.local_executor import LocalExecutor
 from .services.worker_manager import WorkerManager
 from .services.workflow_analyzer import WorkflowAnalyzer
 
+# CPE & Orchestrator services
+from .services.rule_engine import RuleEngine
+from .services.scheduler import Scheduler
+from .services.workflow_parser import WorkflowParser
+from .services.parameter_patcher import ParameterPatcher
+from .services.health_monitor import HealthMonitor
+from .services.llm_service import LLMService
+
 # Global instances using config
 data_manager = DataManager(projects_root=settings.PROJECTS_DIR)
 worker_manager = WorkerManager()
@@ -14,6 +22,14 @@ local_executor = LocalExecutor(
     comfy_url=settings.COMFYUI_URL,
     workflow_dir=settings.WORKFLOWS_DIR,
 )
+
+# CPE & Orchestrator singletons
+rule_engine = RuleEngine()
+scheduler = Scheduler()
+workflow_parser = WorkflowParser()
+parameter_patcher = ParameterPatcher()
+health_monitor = HealthMonitor(scheduler)
+llm_service = LLMService()
 
 def get_data_manager() -> DataManager:
     return data_manager
@@ -29,3 +45,15 @@ def get_worker_manager() -> WorkerManager:
 
 def get_workflow_analyzer() -> WorkflowAnalyzer:
     return workflow_analyzer
+
+def get_rule_engine() -> RuleEngine:
+    return rule_engine
+
+def get_scheduler() -> Scheduler:
+    return scheduler
+
+def get_parameter_patcher() -> ParameterPatcher:
+    return parameter_patcher
+
+def get_llm_service() -> LLMService:
+    return llm_service

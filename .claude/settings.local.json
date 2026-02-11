@@ -1,0 +1,27 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(wc:*)",
+      "WebFetch(domain:github.com)",
+      "Bash(git clone:*)",
+      "Bash(find:*)",
+      "Bash(venv/Scripts/pip install:*)",
+      "Bash(venv/Scripts/python:*)",
+      "Bash(/c/Python312/python -m venv:*)",
+      "Bash(.venv/Scripts/python.exe:*)",
+      "Bash(.venv/Scripts/pip install:*)",
+      "Bash(npm run dev:*)",
+      "Bash(netstat:*)",
+      "Bash(netsh interface ipv4 show excludedportrange:*)",
+      "mcp__plugin_playwright_playwright__browser_navigate",
+      "mcp__plugin_playwright_playwright__browser_take_screenshot",
+      "mcp__plugin_playwright_playwright__browser_click",
+      "Bash(git config:*)",
+      "Bash(git add:*)",
+      "Bash(git commit -m \"$\\(cat <<''EOF''\nPhase 0 complete: SQLite migration, loguru logging, bug fixes + DC/Kitsu integration plan\n\nPhase 0 \\(all 9 tasks done\\):\n- JSON persistence → SQLite with WAL mode + auto-migration\n- Job manager rewritten for DB persistence\n- Worker completion: ComfyUI history polling + job_completed/failed messages\n- 9 files migrated from print\\(\\) to loguru with file rotation\n- Bug fixes: trigger_words split, shots export 404\n- Environment config centralized in config.py\n- Port changed to 8100 \\(Hyper-V reserves 7951-8050\\)\n\nNew files:\n- docs/integration_plan.md: 15-phase DC/Kitsu integration roadmap\n- master/db/database.py: SQLite connection + migration system\n- master/db/migrations/001_initial.sql: Initial schema\n\nROADMAP.md updated to v3.0 with reference repo integration map.\n\nCo-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(git -c user.name=\"Dongseo\" -c user.email=\"dsuasset@g.dongseo.ac.kr\" commit -m \"$\\(cat <<''EOF''\nPhase 0 complete: SQLite migration, loguru logging, bug fixes + feature expansion plan\n\nPhase 0 \\(all 9 tasks done\\):\n- JSON persistence → SQLite with WAL mode + auto-migration\n- Job manager rewritten for DB persistence\n- Worker completion: ComfyUI history polling + job_completed/failed messages\n- 9 files migrated from print\\(\\) to loguru with file rotation\n- Bug fixes: trigger_words split, shots export 404\n- Environment config centralized in config.py\n- Port changed to 8100 \\(Hyper-V reserves 7951-8050\\)\n\nNew files:\n- docs/integration_plan.md: 14-phase feature expansion roadmap\n- master/db/database.py: SQLite connection + migration system\n- master/db/migrations/001_initial.sql: Initial schema\n\nROADMAP.md updated to v3.0 with expanded status tracking.\n\nCo-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(git push:*)",
+      "Bash(git -c user.name=\"Dongseo\" -c user.email=\"dsuasset@g.dongseo.ac.kr\" commit -m \"$\\(cat <<''EOF''\nAdd docs/dev/ to gitignore for internal development docs\n\nCo-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>\nEOF\n\\)\")"
+    ]
+  }
+}

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { X, Upload, Save, Loader2 } from 'lucide-react';
-import { characterApi } from '../lib/api';
+import { characterApi, API_BASE_URL } from '../lib/api';
 
 const CharacterModal = ({ character, onClose, onSave }) => {
     // If character is null, it's create mode
@@ -17,7 +17,7 @@ const CharacterModal = ({ character, onClose, onSave }) => {
     });
 
     const [thumbnail, setThumbnail] = useState(null);
-    const [previewUrl, setPreviewUrl] = useState(character?.thumbnail ? `http://localhost:8000${character.thumbnail}` : null);
+    const [previewUrl, setPreviewUrl] = useState(character?.thumbnail ? `${API_BASE_URL}${character.thumbnail}` : null);
     const [loading, setLoading] = useState(false);
 
     const handleChange = (e) => {

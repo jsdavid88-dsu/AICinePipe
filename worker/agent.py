@@ -161,8 +161,12 @@ async def connect_to_master(master_url):
                 logger.info("Connected to Master!")
 
                 # Initialize components
+                # Use absolute path for workflows relative to this script
+                current_dir = os.path.dirname(os.path.abspath(__file__))
+                workflow_dir = os.path.abspath(os.path.join(current_dir, "../workflows"))
+                
                 comfy_client = ComfyClient(base_url=COMFYUI_URL)
-                executor = JobExecutor(comfy_client, workflow_dir="../workflows")
+                executor = JobExecutor(comfy_client, workflow_dir=workflow_dir)
 
                 # Heartbeat Loop
                 heartbeat_task = asyncio.create_task(send_heartbeat(websocket))

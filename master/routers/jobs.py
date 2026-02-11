@@ -60,33 +60,21 @@ async def create_job(
         # 1. Create Job Record
         job = manager.create_job(project_id, shot_id, workflow_type, params)
         
-        # 2. Scheduling: Try Worker First
-        # Simple Logic: Get first idle worker (not implemented strictly, just broadcast for now or pick random)
-        # TODO: Implement proper scheduler in Phase 6
+        # 2. Scheduling via Scheduler Service
+        from ..dependencies import get_scheduler
+        scheduler = get_scheduler()
         
-        worker_found = False
-        if ws_manager.active_connections:
-            # Pick first available worker
-            worker_id = list(ws_manager.active_connections.keys())[0]
-            logger.info(f"Dispatching job {job.id} to worker {worker_id}")
-            
-            await ws_manager.send_personal_message({
-                "type": "job_assign",
-                "job": job.dict(),
-                "job_id": job.id
-            }, worker_id)
-            
-            manager.update_job_status(job.id, JobStatus.ASSIGNED)
-            worker_found = True
-        
-        # 3. Fallback: Local Execution
-        if not worker_found:
-            logger.warning("No workers available. Attempting local execution...")
-            success = local_exec.execute_job(job)
-            if success:
-                manager.update_job_status(job.id, JobStatus.RUNNING, "Started locally")
+        try:
+            allocated_worker = await scheduler.schedule_job(job)
+            if allocated_worker:
+                logger.info(f"Scheduler assigned job {job.id} to {allocated_worker.id}")
+                manager.update_job_status(job.id, JobStatus.ASSIGNED)
             else:
-                 manager.update_job_status(job.id, JobStatus.FAILED, "Local execution failed")
+                logger.warning(f"No suitable worker found for job {job.id}. Queued.")
+                # Scheduler keeps it in queue, will assign when worker available
+        except Exception as schedule_err:
+             logger.error(f"Scheduling failed: {schedule_err}")
+             # Job remains PENDING
                  
         return job
     except Exception as e:
