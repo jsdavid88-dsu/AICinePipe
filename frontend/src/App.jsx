@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { LayoutGrid, Clapperboard, Users, Settings, Plus, Play, Server, Activity, Camera, Film } from 'lucide-react';
+import { LayoutGrid, Clapperboard, Users, Settings, Plus, Play, Server, Activity, Camera, Film, Wand2 } from 'lucide-react';
 import ShotTable from './components/ShotTable';
 import CharacterBible from './components/CharacterBible';
 import CinematicOptions from './components/CinematicOptions';
 import WorkerDashboard from './components/WorkerDashboard';
 import Timeline from './components/Timeline';
+import ScriptGenerator from './components/ScriptGenerator';
 import { projectApi } from './lib/api';
 
 
@@ -281,6 +282,12 @@ function App() {
                         <Camera size={18} /> Cinematic Options
                     </button>
                     <button
+                        onClick={() => setActiveTab('script')}
+                        className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${activeTab === 'script' ? 'bg-white/10 text-white' : 'text-muted-foreground hover:bg-white/5'}`}
+                    >
+                        <Wand2 size={18} /> Script → Shots
+                    </button>
+                    <button
                         onClick={() => setActiveTab('timeline')}
                         className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${activeTab === 'timeline' ? 'bg-white/10 text-white' : 'text-muted-foreground hover:bg-white/5'}`}
                     >
@@ -354,6 +361,7 @@ function App() {
                                 </div>
                             )}
                             {activeTab === 'characters' && <CharacterBible key={projectId} projectId={projectId} />}
+                            {activeTab === 'script' && <ScriptGenerator onGenerated={() => setActiveTab('shots')} />}
                             {activeTab === 'cinematics' && <CinematicOptions key={projectId} projectId={projectId} />}
                             {activeTab === 'timeline' && <Timeline key={projectId} projectId={projectId} />}
                             {activeTab === 'farm' && <WorkerDashboard />}
