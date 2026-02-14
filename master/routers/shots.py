@@ -313,3 +313,131 @@ async def analyze_shot(shot_id: str, manager: DataManager = Depends(get_data_man
     
     # Optionally verify if we should auto-apply
     return result
+
+
+# ── LLM Script Analysis ────────────────────────────────────────────────
+
+class GenerateFromScriptRequest(BaseModel):
+    """Request body for generating shots from script text."""
+    script_text: str
+    provider: str = "openai"     # openai, anthropic, gemini, ollama, openai_compatible
+    api_key: Optional[str] = None
+    base_url: Optional[str] = None
+    model: str = "gpt-4o"
+    temperature: float = 0.7
+    auto_create: bool = True     # Auto-create shots in the project
+
+
+@router.post("/generate-from-script")
+async def generate_from_script(
+    request: GenerateFromScriptRequest,
+    manager: DataManager = Depends(get_data_manager)
+):
+    """
+    Generate shots from a script/description using LLM analysis.
+    
+    Supports multiple LLM providers:
+    - openai: GPT-4o, GPT-4 (requires api_key or OPENAI_API_KEY env)
+    - anthropic: Claude 3.5/4 (requires api_key or ANTHROPIC_API_KEY env)
+    - gemini: Gemini 2.0 (requires api_key or GOOGLE_API_KEY env)
+    - ollama: Local Ollama (set base_url, no api_key needed)
+    - openai_compatible: Any OpenAI-compatible API (set base_url)
+    """
+    from ..services.script_analyzer import ScriptAnalyzer
+
+    if not request.script_text.strip():
+        raise HTTPException(status_code=400, detail="Script text cannot be empty")
+
+    # Allow env-var-based auth (no api_key needed if env is set)
+    if not request.api_key and request.provider not in ("ollama", "openai_compatible"):
+        import os
+        env_keys = {
+            "openai": "OPENAI_API_KEY",
+            "anthropic": "ANTHROPIC_API_KEY",
+            "gemini": "GOOGLE_API_KEY",
+        }
+        env_key = env_keys.get(request.provider, "")
+        if env_key and not os.environ.get(env_key):
+            raise HTTPException(
+                status_code=400,
+                detail=f"API key is required. Provide api_key or set {env_key} environment variable."
+            )
+
+    try:
+        # Get existing characters for context
+        characters = manager.get_characters() if hasattr(manager, 'get_characters') else []
+        char_dicts = []
+        for c in characters:
+            char_dicts.append({
+                "id": getattr(c, 'id', ''),
+                "name": getattr(c, 'name', 'Unknown'),
+                "description": getattr(c, 'description', ''),
+            })
+
+        # Initialize analyzer with multi-provider support
+        analyzer = ScriptAnalyzer(
+            provider=request.provider,
+            api_key=request.api_key,
+            base_url=request.base_url,
+            model=request.model,
+            temperature=request.temperature,
+        )
+
+        # Generate shot dicts
+        shot_dicts = analyzer.generate_shot_dicts(
+            script_text=request.script_text,
+            characters=char_dicts if char_dicts else None,
+            project_characters=char_dicts if char_dicts else None,
+        )
+
+        created_shots = []
+        if request.auto_create:
+            # Auto-create shots in the project
+            for shot_data in shot_dicts:
+                now = datetime.now().isoformat()
+                new_id = id_generator.next_shot_id(manager.get_shots())
+                shot = Shot(
+                    id=new_id,
+                    scene_description=shot_data.get("scene_description", ""),
+                    dialogue=shot_data.get("dialogue"),
+                    action=shot_data.get("action"),
+                    duration_seconds=shot_data.get("duration_seconds", 4.0),
+                    fps=shot_data.get("fps", 24.0),
+                    frame_count=shot_data.get("frame_count", 96),
+                    generated_prompt=shot_data.get("generated_prompt"),
+                    workflow_type=shot_data.get("workflow_type", "text_to_image"),
+                    status=shot_data.get("status", "pending"),
+                    created_at=now,
+                    updated_at=now,
+                )
+                manager.add_shot(shot)
+                created_shots.append(shot.id)
+
+        return {
+            "message": f"Generated {len(shot_dicts)} shots from script",
+            "provider": request.provider,
+            "model": request.model,
+            "shots_count": len(shot_dicts),
+            "created_ids": created_shots,
+            "total_duration": sum(s.get("duration_seconds", 4) for s in shot_dicts),
+            "shots": shot_dicts if not request.auto_create else None,
+        }
+
+    except RuntimeError as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    except Exception as e:
+        logger.exception(f"Generate from script failed: {e}")
+        raise HTTPException(status_code=500, detail=f"Script analysis failed: {str(e)}")
+
+
+@router.get("/llm-providers")
+async def list_llm_providers():
+    """
+    List available LLM providers and their installation status.
+    
+    Returns which providers are installed and ready to use,
+    along with available models and required environment variables.
+    """
+    from ..services.llm_provider import list_available_providers
+    return {"providers": list_available_providers()}
+

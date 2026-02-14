@@ -1,9 +1,11 @@
 from fastapi import APIRouter, HTTPException, Depends, Body
-from typing import List, Dict
+from fastapi.responses import FileResponse
+from typing import List, Dict, Optional
 import os
 from loguru import logger
 from ..dependencies import get_data_manager
 from ..services.data_manager import DataManager
+from ..services.video_composer import VideoComposer, ComposeOptions, VideoClip
 
 router = APIRouter(
     prefix="/projects",
@@ -161,3 +163,84 @@ async def archive_project(project_id: str, manager: DataManager = Depends(get_da
         
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Archive Failed: {str(e)}")
+
+
+# ── Video Composition ──────────────────────────────────────────────────
+
+@router.post("/{project_id}/compose")
+async def compose_project(
+    project_id: str,
+    transition: str = Body("fade", embed=True),
+    transition_duration: float = Body(0.5, embed=True),
+    manager: DataManager = Depends(get_data_manager)
+):
+    """Compose all shot videos into a single final video."""
+    try:
+        manager.load_project(project_id)
+        shots = manager.get_shots()
+
+        # Filter shots with video files
+        shots_with_video = [s for s in shots if s.generated_video_path and os.path.exists(s.generated_video_path)]
+
+        if not shots_with_video:
+            raise HTTPException(status_code=400, detail="No shots have generated videos to compose")
+
+        # Build output path
+        project_path = manager._get_project_path(project_id)
+        output_dir = os.path.join(project_path, "output")
+        os.makedirs(output_dir, exist_ok=True)
+        output_path = os.path.join(output_dir, f"{project_id}_final.mp4")
+
+        # Build clips from shots
+        clips = []
+        for shot in shots_with_video:
+            clips.append(VideoClip(
+                path=shot.generated_video_path,
+                duration=shot.duration_seconds,
+                transition_type=transition,
+                transition_duration=transition_duration,
+            ))
+
+        # Compose
+        composer = VideoComposer()
+        opts = ComposeOptions(output_path=output_path, clips=clips)
+        result_path = composer.compose(opts)
+        composer.cleanup_temp()
+
+        return {
+            "message": "Video composed successfully",
+            "output_path": result_path,
+            "shots_count": len(shots_with_video),
+            "transition": transition,
+        }
+
+    except HTTPException:
+        raise
+    except RuntimeError as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    except Exception as e:
+        logger.exception(f"Compose failed: {e}")
+        raise HTTPException(status_code=500, detail=f"Compose Failed: {str(e)}")
+
+
+@router.get("/{project_id}/compose/download")
+async def download_composed_video(
+    project_id: str, manager: DataManager = Depends(get_data_manager)
+):
+    """Download the composed final video if it exists."""
+    try:
+        project_path = manager._get_project_path(project_id)
+        output_path = os.path.join(project_path, "output", f"{project_id}_final.mp4")
+
+        if not os.path.exists(output_path):
+            raise HTTPException(status_code=404, detail="No composed video found. Run compose first.")
+
+        return FileResponse(
+            output_path,
+            filename=f"{project_id}_final.mp4",
+            media_type="video/mp4"
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Download Failed: {str(e)}")

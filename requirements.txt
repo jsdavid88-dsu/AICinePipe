@@ -1,14 +1,34 @@
+# ============================================================
+#  AIPipeline Tool — Python Dependencies
+# ============================================================
+
+# ── Core Framework ──────────────────────────────────────────
 fastapi==0.109.0
 uvicorn==0.27.0
 pydantic==2.6.0
 python-multipart==0.0.7
-httpx==0.26.0
 websockets==12.0
+
+# ── HTTP Client ─────────────────────────────────────────────
+httpx==0.26.0
+requests==2.31.0
+
+# ── Data & File Handling ────────────────────────────────────
 pandas==2.2.0
 openpyxl==3.1.2
-requests==2.31.0
+
+# ── Configuration ───────────────────────────────────────────
 python-dotenv==1.0.1
+
+# ── System Monitoring ──────────────────────────────────────
 psutil==5.9.8
 GPUtil==1.4.0
-openai==1.10.0
+
+# ── Logging ─────────────────────────────────────────────────
 loguru==0.7.2
+
+# ── LLM Providers (install as needed) ──────────────────────
+# At least one is needed for AI script analysis (Phase 11)
+openai==1.10.0              # OpenAI GPT + Ollama/vLLM compatible
+# anthropic>=0.40.0         # pip install anthropic   — for Claude
+# google-genai>=1.0.0       # pip install google-genai — for Gemini

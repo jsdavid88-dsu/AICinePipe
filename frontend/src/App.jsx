@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { LayoutGrid, Clapperboard, Users, Settings, Plus, Play, Server, Activity, Camera } from 'lucide-react';
+import { LayoutGrid, Clapperboard, Users, Settings, Plus, Play, Server, Activity, Camera, Film } from 'lucide-react';
 import ShotTable from './components/ShotTable';
 import CharacterBible from './components/CharacterBible';
 import CinematicOptions from './components/CinematicOptions';
@@ -13,6 +13,11 @@ import ProjectSelection from './components/ProjectSelection';
 import { Download } from 'lucide-react';
 
 const SettingsView = ({ projectId }) => {
+    const [composing, setComposing] = React.useState(false);
+    const [composeResult, setComposeResult] = React.useState(null);
+    const [transition, setTransition] = React.useState('fade');
+    const [transitionDuration, setTransitionDuration] = React.useState(0.5);
+
     const handleDownloadEDL = () => {
         window.open(`http://127.0.0.1:8002/projects/${projectId}/export/edl`, '_blank');
     };
@@ -23,6 +28,38 @@ const SettingsView = ({ projectId }) => {
         }
     };
 
+    const handleCompose = async () => {
+        setComposing(true);
+        setComposeResult(null);
+        try {
+            const { data } = await projectApi.compose(projectId, transition, transitionDuration);
+            setComposeResult({ success: true, ...data });
+        } catch (err) {
+            setComposeResult({ success: false, error: err.response?.data?.detail || err.message });
+        } finally {
+            setComposing(false);
+        }
+    };
+
+    const handleDownloadComposed = () => {
+        window.open(`http://127.0.0.1:8002/projects/${projectId}/compose/download`, '_blank');
+    };
+
+    const transitions = [
+        { value: 'none', label: '✂️ Cut (None)' },
+        { value: 'fade', label: '🌅 Fade' },
+        { value: 'fadeblack', label: '⬛ Fade Black' },
+        { value: 'fadewhite', label: '⬜ Fade White' },
+        { value: 'dissolve', label: '💫 Dissolve' },
+        { value: 'wipeleft', label: '👈 Wipe Left' },
+        { value: 'wiperight', label: '👉 Wipe Right' },
+        { value: 'slideleft', label: '⬅️ Slide Left' },
+        { value: 'slideright', label: '➡️ Slide Right' },
+        { value: 'circleopen', label: '⭕ Circle Open' },
+        { value: 'circleclose', label: '🔴 Circle Close' },
+        { value: 'pixelize', label: '🟦 Pixelize' },
+    ];
+
     return (
         <div className="p-6 text-white">
             <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
@@ -30,6 +67,76 @@ const SettingsView = ({ projectId }) => {
             </h2>
 
             <div className="space-y-6 max-w-2xl">
+                {/* Video Composition */}
+                <div className="bg-[#1a1b1e] p-6 rounded-xl border border-white/5">
+                    <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
+                        🎬 Compose Final Video
+                    </h3>
+                    <p className="text-sm text-gray-400 mb-4">
+                        Merge all shot videos into a single final video using FFmpeg.
+                    </p>
+
+                    {/* Transition Options */}
+                    <div className="grid grid-cols-2 gap-4 mb-4">
+                        <div>
+                            <label className="block text-xs text-gray-500 mb-1">Transition Type</label>
+                            <select
+                                value={transition}
+                                onChange={(e) => setTransition(e.target.value)}
+                                className="w-full bg-[#111] border border-white/10 rounded px-3 py-2 text-sm text-white"
+                            >
+                                {transitions.map(t => (
+                                    <option key={t.value} value={t.value}>{t.label}</option>
+                                ))}
+                            </select>
+                        </div>
+                        <div>
+                            <label className="block text-xs text-gray-500 mb-1">Duration (sec)</label>
+                            <input
+                                type="number"
+                                value={transitionDuration}
+                                onChange={(e) => setTransitionDuration(parseFloat(e.target.value) || 0.5)}
+                                min="0" max="3" step="0.1"
+                                disabled={transition === 'none'}
+                                className="w-full bg-[#111] border border-white/10 rounded px-3 py-2 text-sm text-white disabled:opacity-40"
+                            />
+                        </div>
+                    </div>
+
+                    <div className="flex gap-3">
+                        <button
+                            onClick={handleCompose}
+                            disabled={composing}
+                            className="px-4 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 rounded-lg flex items-center gap-2 text-sm font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                            {composing ? (
+                                <><span className="animate-spin">⏳</span> Composing...</>
+                            ) : (
+                                <><Film size={16} /> Compose Video</>
+                            )}
+                        </button>
+                        <button
+                            onClick={handleDownloadComposed}
+                            className="px-4 py-2.5 bg-white/10 hover:bg-white/20 rounded-lg flex items-center gap-2 text-sm font-medium transition-colors"
+                        >
+                            <Download size={16} /> Download Final
+                        </button>
+                    </div>
+
+                    {composeResult && (
+                        <div className={`mt-3 p-3 rounded-lg text-sm ${composeResult.success
+                            ? 'bg-emerald-900/30 border border-emerald-500/30 text-emerald-300'
+                            : 'bg-red-900/30 border border-red-500/30 text-red-300'
+                            }`}>
+                            {composeResult.success
+                                ? `✅ Composed ${composeResult.shots_count} shots with "${composeResult.transition}" transition`
+                                : `❌ ${composeResult.error}`
+                            }
+                        </div>
+                    )}
+                </div>
+
+                {/* Publish & Delivery */}
                 <div className="bg-[#1a1b1e] p-6 rounded-xl border border-white/5">
                     <h3 className="text-lg font-bold mb-4">Publish & Delivery</h3>
                     <div className="flex gap-4">

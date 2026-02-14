@@ -2,93 +2,129 @@
 
 An advanced render farm master server and shot management system for AI video production. This tool orchestrates the workflow between ComfyUI workers, providing a centralized interface for shot management, prompt engineering, and cinematic direction.
 
-## 🚀 Features
+## 🚀 Quick Start (3 Steps)
 
-- **Shot Management**: centralized database for movie shots, encompassing prompts, camera angles, and frame counts.
-- **Worker Orchestration**: Manage and monitor distributed ComfyUI execution nodes.
-- **Cinematic Director**: Tools for defining camera movements, lighting, and environmental presets.
-- **Character Bible**: Consistent character consistency management with reference images and LoRA integration.
-- **Real-time Updates**: WebSocket-based status updates for job progress and worker health.
-- **Modern UI**: Dark-mode enabled, responsive frontend built with React and TailwindCSS.
+### Prerequisites
+- **Python 3.10+** — [python.org](https://python.org) (check "Add to PATH")
+- **Node.js 18+** — [nodejs.org](https://nodejs.org)
+- **ComfyUI** — running locally or on network (for AI rendering)
+
+### Step 1: Clone & Setup
+
+```bash
+git clone <repo-url>
+cd AIPipeline_tool
+```
+
+**Windows:**
+```cmd
+setup.bat
+```
+
+**Mac/Linux:**
+```bash
+chmod +x setup.sh && ./setup.sh
+```
+
+This will automatically:
+- ✅ Create Python virtual environment
+- ✅ Install all Python dependencies
+- ✅ Install frontend npm packages
+- ✅ Create `.env` config from template
+
+### Step 2: Configure (optional)
+
+Edit `.env` to set your environment:
+```ini
+COMFYUI_URL=http://127.0.0.1:8188       # Your ComfyUI instance
+# OPENAI_API_KEY=sk-...                   # For AI script analysis
+```
+
+### Step 3: Run
+
+**Windows:**
+```cmd
+start_all.bat
+```
+
+**Any OS:**
+```bash
+python launcher.py
+```
+
+🎉 Open **http://localhost:5173** in your browser!
+
+---
+
+## 🎬 Features
+
+- **Shot Management** — Centralized database for shots, prompts, camera angles, frame counts
+- **Worker Orchestration** — Manage distributed ComfyUI execution nodes
+- **Cinematic Director** — Camera movements, lighting, and environmental presets
+- **Character Bible** — Consistent characters with LoRA integration
+- **LLM Script Analysis** — Auto-generate shot lists from screenplay text (OpenAI / Anthropic / Gemini / Ollama)
+- **FFmpeg Composition** — Combine rendered shots into final video with transitions
+- **Timeline Editor** — Storyboard timeline with drag & drop
+- **Export** — EDL/XML for Premiere/DaVinci, project archives
+- **Real-time Updates** — WebSocket-based status and progress
+- **Modern UI** — Dark-mode, responsive React frontend
 
 ## 🛠️ Tech Stack
 
-- **Backend**: Python, FastAPI, WebSocket
-- **Frontend**: React, Vite, TailwindCSS, Zustand
-- **Database/Storage**: File-system based (JSON/Excel) for portability, integrated with Pandas.
-- **Communication**: WebSocket for real-time bidirectional communication.
-
-## 📦 Installation
-
-### Prerequisites
-
-- Python 3.10+
-- Node.js 18+
-- ComfyUI instances (for workers)
-
-### Backend Setup
-
-1. Navigate to the root directory.
-2. Create a virtual environment:
-   ```bash
-   python -m venv venv
-   source venv/bin/activate  # On Windows: venv\Scripts\activate
-   ```
-3. Install dependencies:
-   ```bash
-   pip install -r requirements.txt
-   ```
-4. Create a `.env` file (copy from `.env.example`).
-
-### Frontend Setup
-
-1. Navigate to the `frontend` directory:
-   ```bash
-   cd frontend
-   ```
-2. Install dependencies:
-   ```bash
-   npm install
-   ```
-
-## 🚦 Usage
-
-### Running the Master Server
-
-```bash
-# From root directory
-uvicorn master.main:app --host 0.0.0.0 --port 8002 --reload
-```
-The API documentation will be available at `http://localhost:8002/docs`.
-
-### Running the Frontend
-
-```bash
-# From frontend directory
-npm run dev
-```
-The UI will be accessible at `http://localhost:5173`.
-
-### Connecting Workers
-
-Workers (ComfyUI nodes) should run the agent script to connect to this master server:
-
-```bash
-python worker/agent.py --master http://localhost:8002 --name "Worker-01"
-```
+| Layer | Technology |
+|-------|-----------|
+| Backend | Python, FastAPI, WebSocket |
+| Frontend | React, Vite, TailwindCSS |
+| Database | SQLite (WAL mode) |
+| AI Engine | ComfyUI (FLUX, WAN, LTX-2) |
+| Video | FFmpeg |
+| LLM | OpenAI / Anthropic / Gemini / Ollama |
 
 ## 📂 Project Structure
 
-- `master/`: FastAPI backend core, routers, and services.
-- `frontend/`: React-based user interface.
-- `worker/`: Agent scripts for ComfyUI nodes.
-- `workflows/`: ComfyUI workflow JSON definitions.
-- `projects/`: Project data and asset storage.
-- `ref/`: Reference images for cinematic presets.
+```
+AIPipeline_tool/
+├── master/              # FastAPI backend
+│   ├── main.py          # Server entry point
+│   ├── routers/         # API endpoints
+│   ├── services/        # Business logic
+│   ├── models/          # Data models
+│   ├── db/              # Database layer
+│   └── utils/           # Config, logging, helpers
+├── worker/              # ComfyUI worker agent
+│   ├── agent.py         # Worker entry point
+│   ├── comfy_client.py  # ComfyUI API client
+│   └── job_executor.py  # Job execution logic
+├── frontend/            # React UI
+│   └── src/
+├── workflows/           # ComfyUI workflow JSONs
+├── projects/            # Project data & assets
+├── setup.bat            # Windows one-click setup
+├── setup.sh             # Mac/Linux one-click setup
+├── start_all.bat        # Windows launcher
+├── launcher.py          # Cross-platform launcher
+├── requirements.txt     # Python dependencies
+└── .env.example         # Configuration template
+```
+
+## 🔧 Running Services Individually
+
+```bash
+# Backend only
+python -m master.main
+
+# Worker only (connects to master)
+python worker/agent.py --master http://localhost:8002 --name "Worker-01"
+
+# Frontend only
+cd frontend && npm run dev
+```
+
+**API Documentation:** http://localhost:8002/docs
 
 ## 📝 Roadmap
 
-See `docs/roadmap_2026-02-04.md` for the detailed development roadmap and upcoming features.
+See [ROADMAP.md](ROADMAP.md) for the detailed development plan.
 
 ## 🤝 Contributing
 
